@@ -1,0 +1,16 @@
+# python and jupyter
+*.pyc
+.ipynb_checkpoints/
+
+# data and outputs
+data/*
+!data/raw/.gitkeep
+outputs/*
+!data/processed/.gitkeep
+
+
+.env
+.vscode/
+.idea/
+venv/
+
