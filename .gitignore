@@ -3,10 +3,11 @@
 .ipynb_checkpoints/
 
 # data and outputs
-data/*
+data/raw/*
+data/processed/*
 !data/raw/.gitkeep
-outputs/*
 !data/processed/.gitkeep
+outputs/*
 
 
 .env
