@@ -9,9 +9,11 @@ data/processed/*
 !data/processed/.gitkeep
 outputs/*
 
-
+# enviroment
 .env
 .vscode/
 .idea/
 venv/
 
+# kaggle key
+.secrets/
