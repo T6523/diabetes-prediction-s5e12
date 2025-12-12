@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y \
 
 # python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 EXPOSE 8888
+EXPOSE 8501
 
 # default command
 CMD ["/bin/bash"]
