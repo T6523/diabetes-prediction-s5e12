@@ -8,5 +8,6 @@ streamlit
 kaggle
 tqdm
 ipywidgets
+xgboost
 # pytorch with cuda 12.1
 torch --index-url https://download.pytorch.org/whl/cu121
