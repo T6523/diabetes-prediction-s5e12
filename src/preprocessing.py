@@ -2,14 +2,73 @@ from config import NUMERIC_COLS, NOMINAL_COLS, ORDINAL_COLS, BOOL_COLS, ORDINAL_
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler , OrdinalEncoder, OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
+import numpy as np
+
+class FeatureEngineer(BaseEstimator, TransformerMixin):
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X):
+        X = X.copy()
+        eps = 1e-6
+
+        # cardio
+        X['Pulse_Pressure'] = X['systolic_bp'] - X['diastolic_bp']
+        X['MAP'] = (X['systolic_bp'] + (2 * X['diastolic_bp'])) / 3
+        X['Rate_Pressure_Product'] = X['systolic_bp'] * X['heart_rate']
+        X['BP_Index'] = X['systolic_bp'] / (X['diastolic_bp'] + eps)
+        X['Cardio_Stress'] = X['diastolic_bp'] * X['heart_rate']
+
+        # lipid
+        X['Non_HDL'] = X['cholesterol_total'] - X['hdl_cholesterol']
+        X['Trig_HDL_Ratio'] = X['triglycerides'] / (X['hdl_cholesterol'] + eps)
+        X['LDL_HDL_Ratio'] = X['ldl_cholesterol'] / (X['hdl_cholesterol'] + eps)
+        X['Cholesterol_Ratio'] = X['cholesterol_total'] / (X['hdl_cholesterol'] + eps)
+        X['Remnant_Cholesterol'] = X['cholesterol_total'] - X['hdl_cholesterol'] - X['ldl_cholesterol']
+        X['Lipid_Accumulation'] = X['triglycerides'] * X['ldl_cholesterol']
+        X['Log_Triglycerides'] = np.log1p(X['triglycerides'])
+
+        # Body Composition
+        X['Visceral_Fat_Proxy'] = X['bmi'] * X['waist_to_hip_ratio']
+        X['BS_Index'] = X['waist_to_hip_ratio'] / (X['bmi'] + eps)
+        X['Metabolic_Syndrome_Score'] = X['bmi'] + X['waist_to_hip_ratio'] + X['systolic_bp']
+
+        # Lifestyle
+        X['Sedentary_Load'] = X['screen_time_hours_per_day'] / (X['physical_activity_minutes_per_week'] + eps)
+        X['Diet_Activity_Score'] = X['diet_score'] * X['physical_activity_minutes_per_week']
+        X['Unhealthy_Combo'] = X['alcohol_consumption_per_week'] * X['screen_time_hours_per_day']
+        X['Relative_Activity'] = X['physical_activity_minutes_per_week'] / (X['bmi'] + eps)
+        
+        # 20. Activity Efficiency 
+        X['Activity_Efficiency'] = X['heart_rate'] / (X['physical_activity_minutes_per_week'] + eps)
+        X['Alcohol_BMI_Risk'] = X['alcohol_consumption_per_week'] * X['bmi']
+        X['Screen_BMI_Interaction'] = X['screen_time_hours_per_day'] * X['bmi']
+
+        #  Sleep & Stress 
+        X['Sleep_Stress_Proxy'] = X['heart_rate'] / (X['sleep_hours_per_day'] + eps)
+        X['Sleep_Deprivation_Impact'] = X['bmi'] / (X['sleep_hours_per_day'] + eps)
+        X['Morning_Risk'] = X['sleep_hours_per_day'] * X['systolic_bp']
+
+        # Age
+        X['Age_BMI_Risk'] = X['age'] * X['bmi']
+        X['Age_BP_Risk'] = X['age'] * X['systolic_bp']
+        X['Age_WHR_Risk'] = X['age'] * X['waist_to_hip_ratio']
+        X['Vascular_Aging'] = X['age'] * X['Pulse_Pressure']
+        X['Chronic_Metabolic_Load'] = X['age'] * X['triglycerides']
+
+        return X
+
+    def set_output(self, *, transform = None):
+        return self
 
 
 def get_preprocessor():
 
     numeric_pipe = Pipeline([
+        ('feature engineer', FeatureEngineer()),
         ('imputer', SimpleImputer(strategy='median')), 
-        ('scaler', StandardScaler())
     ])
     
     ordinal_pipe = Pipeline([
@@ -19,12 +78,12 @@ def get_preprocessor():
     
     nominal_pipe = Pipeline([
         ('imputer', SimpleImputer(strategy='most_frequent')), 
-        ('encoder', OneHotEncoder(handle_unknown='ignore'))
+        ('encoder', OneHotEncoder(sparse_output=False))
     ])
     
     bool_pipe = Pipeline([
         ('imputer', SimpleImputer(strategy='most_frequent')), 
-        ('encoder', OneHotEncoder(drop='first')) 
+        ('encoder', OneHotEncoder(drop='first', sparse_output=False)) 
     ])
 
     preprocessor = ColumnTransformer(
@@ -34,7 +93,8 @@ def get_preprocessor():
         ('nom', nominal_pipe, NOMINAL_COLS),
         ('bool', bool_pipe, BOOL_COLS)
         ],
-        remainder='passthrough'
-    )
+        remainder='passthrough',
+        verbose_feature_names_out=False
+    ).set_output(transform='pandas')
 
     return preprocessor
