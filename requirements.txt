@@ -8,5 +8,8 @@ streamlit
 tqdm
 ipywidgets
 xgboost
+lightgbm
+catboost
+optuna
 # pytorch with cuda 12.1
 # torch --index-url https://download.pytorch.org/whl/cu121

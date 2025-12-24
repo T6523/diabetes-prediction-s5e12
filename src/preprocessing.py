@@ -5,6 +5,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
+import pandas as pd
+from itertools import combinations
 
 class FeatureEngineer(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
@@ -98,3 +100,23 @@ def get_preprocessor():
     ).set_output(transform='pandas')
 
     return preprocessor
+
+def get_top_k_features(base_model,X,y, k=10):
+    k = min(k, X.shape[1])
+    base_model.fit(X,y)
+    feature_names = X.columns.tolist()
+    importances = pd.Series(base_model.feature_importances_, index=feature_names)
+    return importances.nlargest(k).index.tolist()
+
+def is_numeric(df,col):
+    return col not in ORDINAL_COLS and df[col].nunique() > 2
+
+def add_important_interaction(df, important_cols):
+    df_new = df.copy()
+    vips = [col for col in important_cols if is_numeric(df,col)]
+    count = len(vips)
+    print(f"combining {count} cols")
+    for col1, col2 in combinations(vips, 2):
+        df_new[f"{col1}_x_{col2}"] = df[col1] * df[col2]
+    print(f"added {(count)*(count-1) // 2} cols as interactions")
+    return df_new

@@ -1,8 +1,7 @@
 import pandas as pd
-import numpy as np
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
+from config import TARGET
 
 class DiabetesLoader:
     def __init__(self, filepath):
@@ -25,7 +24,7 @@ class DiabetesLoader:
 
 
     def split_data(self, split_ratio=0.8):
-        target_col = 'diagnosed_diabetes'
+        target_col = TARGET
         X = self.df.drop(columns=[target_col])
         y = self.df[target_col]
         
@@ -41,3 +40,17 @@ class DiabetesLoader:
         print(f"Val X:   {self.X_val.shape}    Val y:   {self.y_val.shape}")
         
         return self.X_train, self.y_train, self.X_val, self.y_val
+
+class TestLoader:
+    def __init__(self, filepath):
+        self.filepath = os.path.abspath(filepath)
+        self.df = None
+    
+    def load_data(self):
+        print(f"Loading data from {self.filepath}")
+        self.df = pd.read_csv(self.filepath)
+
+    def get_data(self):
+        self.load_data()
+        print(f"Test X: {self.df.shape}")
+        return self.df
