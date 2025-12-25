@@ -1,4 +1,4 @@
-import optuna
+import os
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from catboost import CatBoostClassifier
@@ -28,7 +28,9 @@ def lgbm_objective(trial, ratio, X, y):
     params = {
         'n_estimators': trial.suggest_int('lgbm_n_estimators', 200, 600),
         'learning_rate': trial.suggest_float('lgbm_lr', 0.01, 0.1, log=True),
-        'num_leaves': trial.suggest_int('lgbm_num_leaves', 20, 40),
+        'max_depth': trial.suggest_int('lgbm_depth', 3, 12),
+        'num_leaves': trial.suggest_int('lgbm_num_leaves', 20, 2000),
+        'min_data_in_leaf': trial.suggest_int('lgbm_leaf_size', 100, 100000),
         'scale_pos_weight': ratio,
         'n_jobs': -1,
         'random_state': 42,
@@ -42,11 +44,13 @@ def lgbm_objective(trial, ratio, X, y):
 
 def cat_objective(trial, ratio, X, y):
     params = {
-            'iterations': trial.suggest_int('cat_iterations', 200, 800),
-            'depth': trial.suggest_int('cat_depth', 4, 8),
-            'learning_rate': trial.suggest_float('cat_lr', 0.01, 0.1, log=True),
-            'l2_leaf_reg': trial.suggest_int('cat_l2', 1, 10),
+            'iterations': trial.suggest_int('iterations', 400, 800),
+            'depth': trial.suggest_int('depth', 4, 10),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.1, log=True),
+            'l2_leaf_reg': trial.suggest_int('l2_leaf_reg', 1, 10),
+            'subsample': trial.suggest_float('subsample', 0.5, 1),
             'scale_pos_weight': ratio,
+            'threads': os.cpu_count(),
             'verbose': 0,
             'random_state': 42,
             'allow_writing_files': False

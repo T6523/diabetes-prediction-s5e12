@@ -43,7 +43,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         X['Unhealthy_Combo'] = X['alcohol_consumption_per_week'] * X['screen_time_hours_per_day']
         X['Relative_Activity'] = X['physical_activity_minutes_per_week'] / (X['bmi'] + eps)
         
-        # 20. Activity Efficiency 
+        # Activity Efficiency 
         X['Activity_Efficiency'] = X['heart_rate'] / (X['physical_activity_minutes_per_week'] + eps)
         X['Alcohol_BMI_Risk'] = X['alcohol_consumption_per_week'] * X['bmi']
         X['Screen_BMI_Interaction'] = X['screen_time_hours_per_day'] * X['bmi']
@@ -69,7 +69,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
 def get_preprocessor():
 
     numeric_pipe = Pipeline([
-        ('feature engineer', FeatureEngineer()),
+        # ('feature engineer', FeatureEngineer()),
         ('imputer', SimpleImputer(strategy='median')), 
     ])
     
