@@ -2,7 +2,7 @@ from config import NUMERIC_COLS, NOMINAL_COLS, ORDINAL_COLS, BOOL_COLS, ORDINAL_
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, FunctionTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
@@ -120,3 +120,111 @@ def add_important_interaction(df, important_cols):
         df_new[f"{col1}_x_{col2}"] = df[col1] * df[col2]
     print(f"added {(count)*(count-1) // 2} cols as interactions")
     return df_new
+
+def get_xgb_preprocessor():
+    numeric_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+    ])
+    
+    # Ordinal Encoder
+    ordinal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(categories=ORDINAL_CATEGORIES, handle_unknown='use_encoded_value', unknown_value=-1))
+    ])
+    
+    # OHE for Nominal
+    nominal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OneHotEncoder(sparse_output=False, handle_unknown='ignore'))
+    ])
+    
+    # OHE for Bool 
+    bool_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OneHotEncoder(drop='first', sparse_output=False, handle_unknown='ignore')) 
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_pipe, NUMERIC_COLS),
+            ('ord', ordinal_pipe, ORDINAL_COLS),
+            ('nom', nominal_pipe, NOMINAL_COLS),
+            ('bool', bool_pipe, BOOL_COLS)
+        ],
+        remainder='passthrough',
+        verbose_feature_names_out=False
+    ).set_output(transform='pandas')
+
+    return preprocessor
+
+def get_lgbm_preprocessor():
+    numeric_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+    ])
+    
+    # Ordinal Encoder
+    ordinal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(categories=ORDINAL_CATEGORIES, handle_unknown='use_encoded_value', unknown_value=-1))
+    ])
+    
+    # OHE for Nominal 
+    nominal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)) 
+    ])
+    
+    # OHE for Bool
+    bool_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)) 
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_pipe, NUMERIC_COLS),
+            ('ord', ordinal_pipe, ORDINAL_COLS),
+            ('nom', nominal_pipe, NOMINAL_COLS), 
+            ('bool', bool_pipe, BOOL_COLS)    
+        ],
+        remainder='passthrough',
+        verbose_feature_names_out=False
+    ).set_output(transform='pandas')
+
+    return preprocessor
+
+def get_cat_preprocessor():
+    numeric_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+    ])
+    
+    # Ordinal encoder
+    ordinal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(categories=ORDINAL_CATEGORIES, handle_unknown='use_encoded_value', unknown_value=-1))
+    ])
+    
+    # keep string
+    nominal_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='constant', fill_value='Missing')), 
+        ('encoder', FunctionTransformer(lambda x: x.astype(str))) 
+    ])
+    
+    # OHE for Bool
+    bool_pipe = Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')), 
+        ('encoder', OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)) 
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_pipe, NUMERIC_COLS),
+            ('ord', ordinal_pipe, ORDINAL_COLS),
+            ('nom', nominal_pipe, NOMINAL_COLS),
+            ('bool', bool_pipe, BOOL_COLS)
+        ],
+        remainder='passthrough',
+        verbose_feature_names_out=False
+    ).set_output(transform='pandas')
+
+    return preprocessor
