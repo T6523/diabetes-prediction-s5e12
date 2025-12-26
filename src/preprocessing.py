@@ -109,17 +109,23 @@ def get_top_k_features(base_model,X,y, k=10):
     return importances.nlargest(k).index.tolist()
 
 def is_numeric(df,col):
-    return col not in ORDINAL_COLS and df[col].nunique() > 2
+    return col not in ORDINAL_COLS and df[col].nunique() > 2 and isinstance(df[col].iloc[0], float)
 
 def add_important_interaction(df, important_cols):
-    df_new = df.copy()
-    vips = [col for col in important_cols if is_numeric(df,col)]
+    
+    vips = [col for col in important_cols if is_numeric(df, col)]
     count = len(vips)
     print(f"combining {count} cols")
+    
+    new_features = {}
     for col1, col2 in combinations(vips, 2):
-        df_new[f"{col1}_x_{col2}"] = df[col1] * df[col2]
-    print(f"added {(count)*(count-1) // 2} cols as interactions")
-    return df_new
+        new_features[f"{col1}_x_{col2}"] = df[col1] * df[col2]
+    
+    df_interactions = pd.DataFrame(new_features, index=df.index)
+    df_final = pd.concat([df, df_interactions], axis=1)
+    print(f"added {len(new_features)} cols as interactions")
+    
+    return df_final
 
 def global_preprocessor():
     numeric_pipe = Pipeline([
