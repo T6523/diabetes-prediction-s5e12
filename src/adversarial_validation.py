@@ -7,7 +7,7 @@ class Validator:
         self.model = XGBClassifier(n_jobs=-1, random_state=42)
         
         self.y_av = df[target_name]
-        self.X_av = df.drop([target_name, 'diagnosed_diabetes'], axis=1, errors='ignore')
+        self.X_av = df.drop([target_name], axis=1, errors='ignore')
         
         self.train()
         self.predict()
@@ -19,7 +19,6 @@ class Validator:
         self.pred = self.model.predict_proba(self.X_av)[:, 1]
 
     def get_filtered(self, threshold=0.75):
-        # Apply mask to the ORIGINAL dataframe
         mask = self.get_mask(threshold)
         print(f"Filtering: Dropped {len(self.original_df) - mask.sum()} rows")
         return self.original_df[mask].copy()
