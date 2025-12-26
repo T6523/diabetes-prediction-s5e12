@@ -17,3 +17,6 @@ venv/
 
 # kaggle key
 .secrets/
+
+# catboost
+notebook/catboost_info/
