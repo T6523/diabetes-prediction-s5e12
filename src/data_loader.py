@@ -70,6 +70,8 @@ class DiabetesLoader:
 
         self.df = pd.concat([self.df,self.ex])
 
+    def get_df(self):
+        return self.df
 
 
 class TestLoader:

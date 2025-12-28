@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  ag_studio:
+    # GPU image
+    image: autogluon/autogluon:1.0.0-cuda11.8-jupyter-ubuntu20.04-py3.10
+    
+    ports:
+      - "8888:8888"
+      
+    volumes:
+      - ./:/home/jupyter/work
+      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+              
+    # Shared Memory for PyTorch
+    shm_size: '12gb'
+    
+    command: jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.token=''

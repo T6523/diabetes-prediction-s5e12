@@ -20,3 +20,6 @@ venv/
 
 # catboost
 notebook/catboost_info/
+
+# autogluon
+notebook/AutogluonModels/
